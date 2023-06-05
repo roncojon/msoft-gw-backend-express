@@ -1,5 +1,9 @@
 const express = require('express');
 const router = express.Router();
+
+const bodyParser = require('body-parser');
+router.use(bodyParser.json());
+
 const db = require('../db');
 
 let nextUID = 1;
@@ -97,18 +101,25 @@ router.post('/', (req, res) => {
 router.delete('/:uid', (req, res) => {
     const { uid } = req.params;
   
+    console.log('device uid')
+    console.log(uid)
     // Find the device with the provided UID
     const deviceIndex = db.devices.findIndex((device) => device.uid === Number(uid));
-  
+    console.log('deviceIndex')
+    console.log(deviceIndex)
+
     if (deviceIndex === -1) {
       res.status(404).json({ message: 'Device not found' });
       return;
     }
   
     // Get the UID of the gateway the device belongs to
-    const gatewayUID = db.gateways.find((gateway) => gateway.devices.includes(Number(uid)))?.uid;
-  
-    if (!gatewayUID) {
+    // const gatewayUID = db.gateways.find((gateway) => gateway.devices.includes(Number(uid)))?.uid;
+    const gateway = db.gateways.find((gateway) => gateway.devices.includes(Number(uid)));
+    console.log('gatewgatewayayUID')
+    console.log(gateway)
+
+    if (!gateway) {
       res.status(404).json({ message: 'Gateway not found' });
       return;
     }
@@ -117,7 +128,7 @@ router.delete('/:uid', (req, res) => {
     db.devices.splice(deviceIndex, 1);
   
     // Remove the device UID from the devices array of the corresponding gateway
-    const gateway = db.gateways.find((gateway) => gateway.uid === gatewayUID);
+    // const gateway = db.gateways.find((gw) => gw.serialNumber === gateway.serialNumber);
     if (gateway) {
       const deviceIndexInGateway = gateway.devices.indexOf(Number(uid));
       if (deviceIndexInGateway !== -1) {

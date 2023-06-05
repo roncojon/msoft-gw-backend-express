@@ -1,5 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const bodyParser = require('body-parser');
+
+// Add the body-parser middleware
+router.use(bodyParser.json());
+
 const db = require('../db');
 
 const { v4: uuidv4 } = require('uuid');
@@ -57,8 +62,8 @@ router.get('/:serialNumber', (req, res) => {
             serialNumber: gateway.serialNumber,
             name: gateway.name,
             ipv4address: gateway.ipv4address,
-            offlineDevices: gateway.devices.filter((device) => device.status === 'offline').length || 0,
-            onlineDevices: gateway.devices.filter((device) => device.status === 'online').length || 0,
+            /* offlineDevices: gateway.devices.filter((device) => device.status === 'offline').length || 0,
+            onlineDevices: gateway.devices.filter((device) => device.status === 'online').length || 0, */
             devices: gateway.devices.map((deviceUID) => {
                 const device = db.devices.find((device) => device.uid === deviceUID);
                 return {
@@ -76,22 +81,76 @@ router.get('/:serialNumber', (req, res) => {
     }
 });
 
-router.post('/', (req, res) => {
-    const { name, ipv4address } = req.body; // Assuming the request body contains the necessary fields
+// router.post('/', (req, res) => {
+//     console.log('req.body')
+//   console.log(req.body)
+//     const { name, ipv4address } = req.body; // Assuming the request body contains the necessary fields
   
-    // Create a new gateway object
-    const newGateway = {
+//     // Create a new gateway object
+//     const newGateway = {
+//         serialNumber: generateUniqueSerialNumber(),
+//         name: name,
+//         ipv4address: ipv4address,
+//       devices: [], // Initialize devices as an empty array
+//     };
+  
+//     // Add the new gateway to the gateways array
+//     db.gateways.push(newGateway);
+  
+//     res.status(201).json({ message: 'Gateway created successfully', gateway: newGateway });
+//     return;
+//   });
+
+router.post('/', (req, res) => {
+    try {
+      const { name, ipv4address } = req.body; // Assuming the request body contains the necessary fields
+  
+      console.log('namename')
+      console.log(name)
+
+      console.log('ipv4address')
+      console.log(ipv4address)
+      // Validate the IPv4 address
+      if (!isValidIPv4(ipv4address)) {
+        throw new Error('Invalid IPv4 address');
+      }
+  
+      // Create a new gateway object
+      const newGateway = {
         serialNumber: generateUniqueSerialNumber(),
         name: name,
         ipv4address: ipv4address,
-      devices: [], // Initialize devices as an empty array
-    };
+        devices: [], // Initialize devices as an empty array
+      };
   
-    // Add the new gateway to the gateways array
-    db.gateways.push(newGateway);
+      // Add the new gateway to the gateways array
+      db.gateways.push(newGateway);
   
-    res.status(201).json({ message: 'Gateway created successfully', gateway: newGateway });
+      res.status(201).json({ message: 'Gateway created successfully', gateway: newGateway });
+    } catch (error) {
+      console.error(error);
+  
+      res.status(400).json({ error: error.message });
+    }
   });
+  
+  // Helper function to validate IPv4 address
+  function isValidIPv4(ipv4) {
+    const parts = ipv4.split('.');
+  
+    if (parts.length !== 4) {
+      return false; // IP address should have four parts
+    }
+  
+    for (const part of parts) {
+      const num = parseInt(part, 10);
+      if (isNaN(num) || num < 0 || num > 255) {
+        return false; // Part is not a valid number or is outside the valid range
+      }
+    }
+  
+    return true; // Valid IPv4 address
+  }
 
 module.exports = router;
 
