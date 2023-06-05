@@ -6,7 +6,7 @@ router.use(bodyParser.json());
 
 const db = require('../db');
 
-let nextUID = 1;
+let nextUID = 100;
 
 function generateUID() {
   const uid = nextUID;
