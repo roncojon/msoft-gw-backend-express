@@ -1,8 +1,8 @@
 const express = require('express');
 const app = express();
-const port = 3001;
+const port = 3000;
 
-const routes = require('./routes/routes');
+const routes = require('./src/routes/routes');
 
 app.use('/', routes);
 

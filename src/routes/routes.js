@@ -7,6 +7,7 @@ const gatewaysRouter = require('./gateways');
 const devicesRouter = require('./devices');
 
 // Register route handlers
+router.use('/*', gatewaysRouter);
 router.use('/totals', totalsRouter);
 router.use('/gateways', gatewaysRouter);
 router.use('/devices', devicesRouter);
