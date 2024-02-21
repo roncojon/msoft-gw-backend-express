@@ -35,7 +35,7 @@ router.get('/', (req, res) => {
         return {
           uid: device.uid,
           vendor: device.vendor,
-          dateCreated: device.dateCreated,
+          date_created: device.date_created,
           status: device.status,
           matchSearch: device.uid.toString().includes(uid),
         };
@@ -43,7 +43,7 @@ router.get('/', (req, res) => {
 
       // Create the gateway object with device information
       return {
-        serialNumber: gateway.serialNumber,
+        serial_number: gateway.serial_number,
         name: gateway.name,
         ipv4address: gateway.ipv4address,
         offlineDevices: devicesInGateway.filter((device) => device.status === 'offline').length || 0,
@@ -62,10 +62,10 @@ router.get('/', (req, res) => {
 });
 
 router.post('/', (req, res) => {
-  const { vendor, dateCreated, status, gatewaySerialNumber } = req.body; // Assuming the request body contains the necessary fields, including the gatewaySerialNumber
+  const { vendor, date_created, status, gatewayserial_number } = req.body; // Assuming the request body contains the necessary fields, including the gatewayserial_number
 
   // Find the gateway with the provided serial number
-  const gateway = db.gateways.find((gateway) => gateway.serialNumber === gatewaySerialNumber);
+  const gateway = db.gateways.find((gateway) => gateway.serial_number === gatewayserial_number);
 
   if (!gateway) {
     res.status(404).json({ message: 'Gateway not found' });
@@ -85,7 +85,7 @@ router.post('/', (req, res) => {
   const newDevice = {
     uid,
     vendor,
-    dateCreated,
+    date_created,
     status
   };
 
@@ -128,7 +128,7 @@ router.delete('/:uid', (req, res) => {
     db.devices.splice(deviceIndex, 1);
   
     // Remove the device UID from the devices array of the corresponding gateway
-    // const gateway = db.gateways.find((gw) => gw.serialNumber === gateway.serialNumber);
+    // const gateway = db.gateways.find((gw) => gw.serial_number === gateway.serial_number);
     if (gateway) {
       const deviceIndexInGateway = gateway.devices.indexOf(Number(uid));
       if (deviceIndexInGateway !== -1) {
