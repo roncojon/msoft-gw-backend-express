@@ -1,7 +1,8 @@
 import express from 'express';
 const router = express.Router();
 // import db from '../db';
-import { DataType } from '../db';
+// import { DataType } from '../db';
+import {  Tables } from "../../database.types";
 
 // const db:DataType = require('../db');
 const getData = require('../db');
@@ -50,46 +51,40 @@ function generateUniqueserial_number() {
 router.get('/', async (req, res) => {
     const { sn } = req.query;
 
-
-    
     const gateways:GatewayFromDb[] = (await getData(false)).gateways;
-    // const devicess:DeviceFromDb[] = (await getData()).gateways;
-    const { data:devicesInGateway , error } = await supabase.from('Gateways').select('serial_number').eq('serial_number',gateways[0].serial_number).select(`
-    serial_number,
-    Devices (
-        uid
-    )
-  `)/* .eq('serial_number',gateways[0].serial_number) */ as ({data:DeviceFromDb[],error})
-
-    console.log('gatewaysgateways',gateways)
-    console.log('devicesInGateway',devicesInGateway)
+   
     // Filter gateways by serial number if 'sn' query parameter is present
     const matchedGateways = sn ? gateways.filter(gateway => gateway.serial_number.includes(sn.toString())) : gateways;
 
     // Map over the matched gateways to create the response data
-    const gatewaysWithDevices = matchedGateways.map(gateway => {
-        // const devicesInGateway = gateway.devices.map(deviceUID => {
-        //     const device = db.devices.find(device => device.uid === deviceUID);
-        //     return {
-        //         uid: device?.uid,
-        //         vendor: device?.vendor,
-        //         date_created: device?.date_created,
-        //         status: device?.status,
-        //         // matchSearch: device.uid.toString().includes(sn),
-        //     };
-        // });
+    const gatewaysWithDevices = await Promise.all(matchedGateways.map(async (gateway) => {
+        const { data:devicesInGateway , error } = await supabase.from('Gateways')
+        .select('serial_number')
+        .eq('serial_number',gateway.serial_number)
+        .select(`
+        Devices (
+            *
+        )
+      `) /* as ({data:DeviceFromDb[],error}) */
+    
+      const devicesss:DeviceFromDb[] = devicesInGateway.flatMap(d=>d.Devices);
+
+        console.log('gatewaysgateways',gateways)
+        console.log('devicesInGateway',devicesInGateway)
+        console.log('devicesss',devicesss)
 
 
         return {
             serial_number: gateway.serial_number,
             name: gateway.name,
             ipv4address: gateway.ipv4address,
-            // offlineDevices: devicesInGateway.filter(device => device.status === 'offline').length || 0,
-            // onlineDevices: devicesInGateway.filter(device => device.status === 'online').length || 0,
-            devices: devicesInGateway,
+            offlineDevices: devicesss?.filter(device => device?.status === false).length || 0,
+            onlineDevices: devicesss?.filter(device => device?.status === true).length || 0,
+            devices: devicesss ?? [],
         };
-    });
+    }));
 
+    console.log('gatewaysWithDevices',gatewaysWithDevices)
     res.json({ gateways: gatewaysWithDevices });
 });
 
